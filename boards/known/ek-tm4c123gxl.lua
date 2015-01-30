@@ -9,8 +9,7 @@ return {
     shell = true,
     term = { lines = 25, cols = 80 },
     cints = true,
-    tm4c_disp = true,
-    tm4c_pio = true,
+    tm4c_proxima = true,
     rpc = { uart = 0, speed = 115200 },
     adc = { buf_size = 2 },
     xmodem = true,
@@ -19,7 +18,7 @@ return {
     vtmr = { num = 4, freq = 4 },
   },
   modules = {
-    generic = { 'all', '-adc', '-pwm', '-i2c', '-net', '-can' },
+    generic = { 'all', '-adc', '-pwm', '-net', '-can' },
     platform = 'all',
   }
 }

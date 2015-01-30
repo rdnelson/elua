@@ -9,10 +9,7 @@ local at = require "attributes"
 function add_platform_components( t, board, cpu )
   t.cdc = comps.cdc_uart()
   board = board:upper()
-  if board == 'EK-TM4C123GXL' then
-    t.tm4c_disp = { macro = 'ENABLE_DISP' }
-  end
-  t.tm4c_pio = { macro = 'ENABLE_TM4C_GPIO' }
+  t.tm4c_proxima = { macro = 'ENABLE_PROXIMA' }
 end
 
 -- Add specific configuration to the 'configs' table
@@ -28,11 +25,11 @@ end
 
 -- Return an array of all the available platform modules for the given cpu
 function get_platform_modules( board, cpu )
-  -- m = { pio = { guards = { 'ENABLE_TM4C_GPIO' }, lib = '"pio"', map = "tm4c_pio_map", open = false } }
-  -- board = board:upper()
-  -- if board == 'EK-TM4C123GXL' then
-  --   m.disp = { guards = { 'ENABLE_DISP' }, lib = '"disp"', open = false }
-  -- end
-  return {}
+  m = { proxima = { guards = { 'ENABLE_PROXIMA' }, lib = '"proxima"', map = "proxima_map", open = false } }
+  --board = board:upper()
+  --if board == 'EK-TM4C123GXL' then
+  --  m.disp = { guards = { 'ENABLE_DISP' }, lib = '"disp"', open = false }
+  --end
+  return m
 end
 

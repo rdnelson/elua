@@ -32,6 +32,7 @@
 #include "driverlib/pwm.h"
 #include "driverlib/adc.h"
 #include "driverlib/systick.h"
+#include "driverlib/i2c.h"
 #include "driverlib/flash.h"
 #include "buf.h"
 #include "utils.h"
@@ -40,7 +41,8 @@
 #define TARGET_IS_BLIZZARD_RB1
 #define PART_TM4C123GH6PM
 #include "driverlib/pin_map.h"
-//#include "CU_TM4C123.h"
+#include "driverlib/rom.h"
+#include "driverlib/rom_map.h"
 #endif
 
 // USB CDC Stuff
@@ -61,6 +63,10 @@ static void pios_init();
 
 #if NUM_SPI > 0
 static void spis_init();
+#endif
+
+#if NUM_I2C > 0
+static void i2c_init();
 #endif
 
 #if NUM_PWM > 0
@@ -89,6 +95,10 @@ int platform_init()
 
 #if NUM_SPI > 0
     spis_init();
+#endif
+
+#if NUM_I2C > 0
+    i2c_init();
 #endif
 
     uarts_init();
@@ -137,7 +147,7 @@ static void pios_init()
 {
     unsigned int i;
 
-    for ( i = 0; i > NUM_PIO; i++ )
+    for ( i = 0; i < NUM_PIO; i++ )
     {
         MAP_SysCtlPeripheralEnable(pio_sysctl[ i ]);
     }
@@ -389,11 +399,80 @@ void platform_spi_select( unsigned id, int is_select )
 
 #endif // NUM_SPI > 0
 
+#if NUM_I2C > 0
+
+static const u32 i2c_base[] = { I2C0_BASE, I2C1_BASE };
+static const u32 i2c_sysctl[] = { SYSCTL_PERIPH_I2C0, SYSCTL_PERIPH_I2C1 };
+static const u32 i2c_gpio_base[] = { GPIO_PORTB_BASE, GPIO_PORTA_BASE };
+static const u8  i2c_gpio_pins[] = { GPIO_PIN_2 | GPIO_PIN_3,
+                                     GPIO_PIN_6 | GPIO_PIN_7 };
+static const u32 i2c_gpiofunc[] = { GPIO_PB2_I2C0SCL, GPIO_PB3_I2C0SDA,
+                                    GPIO_PA6_I2C1SCL, GPIO_PA7_I2C1SDA };
+
+static void i2c_init()
+{
+    unsigned i;
+    for( i = 0; i < NUM_I2C; i++ )
+        MAP_SysCtlPeripheralEnable( i2c_sysctl[ i ] );
+}
+
+u32 platform_i2c_setup( unsigned id, u32 speed )
+{
+    MAP_I2CMasterDisable( i2c_base[ id ] );
+
+    MAP_GPIOPinConfigure( i2c_gpiofunc[ id << 1 ] );
+    MAP_GPIOPinConfigure( i2c_gpiofunc[ ( id << 1 ) + 1 ] );
+
+    MAP_GPIOPinTypeI2C( i2c_gpio_base[ id ], i2c_gpio_pins[ id ] );
+    MAP_GPIOPadConfigSet( i2c_gpio_base[ id ], i2c_gpio_pins[ id ], GPIO_STRENGTH_4MA, GPIO_PIN_TYPE_STD_WPU);
+
+    MAP_I2CMasterInitExpClk( i2c_base[ id ], MAP_SysCtlClockGet(), speed == PLATFORM_I2C_SPEED_FAST );
+
+    MAP_I2CMasterEnable( i2c_base[ id ] );
+
+    return speed;
+}
+
+void platform_i2c_send_start( unsigned id )
+{
+    MAP_I2CMasterControl( i2c_base[ id ], I2C_MASTER_CMD_BURST_SEND_START );
+}
+
+void platform_i2c_send_stop( unsigned id )
+{
+    MAP_I2CMasterControl( i2c_base[ id ], I2C_MASTER_CMD_BURST_SEND_FINISH );
+}
+
+int platform_i2c_send_address( unsigned id, u16 address, int direction )
+{
+    MAP_I2CMasterSlaveAddrSet( i2c_base[ id ], address & 0x7F, direction == PLATFORM_I2C_DIRECTION_RECEIVER );
+    MAP_I2CMasterControl( i2c_base[ id ], I2C_MASTER_CMD_QUICK_COMMAND );
+
+    return 1;
+
+}
+
+int platform_i2c_send_byte( unsigned id, u8 data )
+{
+    MAP_I2CMasterDataPut( i2c_base[ id ], data );
+
+    return 0;
+}
+
+int platform_i2c_recv_byte( unsigned id, int ack )
+{
+    u32 data = MAP_I2CMasterDataGet( i2c_base[ id ] );
+
+    MAP_I2CMasterControl( i2c_base[ id ], (ack == 1 ) ? I2C_MASTER_CMD_BURST_RECEIVE_FINISH : I2C_MASTER_CMD_BURST_RECEIVE_ERROR_STOP );
+
+    return data;
+}
+
+#endif
+
 static const u32 uart_base[] = { UART0_BASE, UART1_BASE, UART2_BASE, UART3_BASE, UART4_BASE, UART5_BASE, UART7_BASE };
 static const u32 uart_sysctl[] = { SYSCTL_PERIPH_UART0, SYSCTL_PERIPH_UART1, SYSCTL_PERIPH_UART2,
     SYSCTL_PERIPH_UART3, SYSCTL_PERIPH_UART4, SYSCTL_PERIPH_UART5, SYSCTL_PERIPH_UART7 };
-static const u32 uart_gpio_sysctl[] = { SYSCTL_PERIPH_GPIOA, SYSCTL_PERIPH_GPIOC, SYSCTL_PERIPH_GPIOD, SYSCTL_PERIPH_GPIOC,
-    SYSCTL_PERIPH_GPIOC, SYSCTL_PERIPH_GPIOE, SYSCTL_PERIPH_GPIOE };
 static const u32 uart_gpio_base[] = { GPIO_PORTA_BASE, GPIO_PORTC_BASE, GPIO_PORTD_BASE, GPIO_PORTC_BASE,
     GPIO_PORTC_BASE, GPIO_PORTE_BASE, GPIO_PORTE_BASE };
 static const u8 uart_gpio_pins[] = { GPIO_PIN_0 | GPIO_PIN_1,
@@ -417,7 +496,6 @@ static void uarts_init()
     for (i = 0; i < NUM_UART; i++ )
     {
         MAP_SysCtlPeripheralEnable(uart_sysctl[ i ]);
-        MAP_SysCtlPeripheralEnable(uart_gpio_sysctl[ i ]);
     }
 }
 

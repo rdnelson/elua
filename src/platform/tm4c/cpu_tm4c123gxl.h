@@ -20,6 +20,7 @@
 #define NUM_PWM               0
 #define NUM_ADC               0
 #define NUM_CAN               0
+#define NUM_I2C               2
 
 #define ADC_BIT_RESOLUTION    10
 
