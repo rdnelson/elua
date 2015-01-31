@@ -34,6 +34,8 @@
 #include "driverlib/systick.h"
 #include "driverlib/i2c.h"
 #include "driverlib/flash.h"
+#include "hw_types.h"
+#include "hw_gpio.h"
 #include "buf.h"
 #include "utils.h"
 
@@ -43,6 +45,8 @@
 #include "driverlib/pin_map.h"
 #include "driverlib/rom.h"
 #include "driverlib/rom_map.h"
+
+#define UNLOCK_MAGIC_NUM 0x4C4F434B
 #endif
 
 // USB CDC Stuff
@@ -151,6 +155,12 @@ static void pios_init()
     {
         MAP_SysCtlPeripheralEnable(pio_sysctl[ i ]);
     }
+
+    HWREG( GPIO_PORTF_BASE + GPIO_O_LOCK ) = UNLOCK_MAGIC_NUM;
+    HWREG( GPIO_PORTD_BASE + GPIO_O_LOCK ) = UNLOCK_MAGIC_NUM;
+
+    HWREG( GPIO_PORTF_BASE + GPIO_O_CR ) |= GPIO_PIN_0;
+    HWREG( GPIO_PORTD_BASE + GPIO_O_CR ) |= GPIO_PIN_7;
 }
 
 pio_type platform_pio_op( unsigned port, pio_type pinmask, int op )
@@ -418,10 +428,12 @@ static void i2c_init()
 
 u32 platform_i2c_setup( unsigned id, u32 speed )
 {
+
     MAP_I2CMasterDisable( i2c_base[ id ] );
 
     MAP_GPIOPinConfigure( i2c_gpiofunc[ id << 1 ] );
     MAP_GPIOPinConfigure( i2c_gpiofunc[ ( id << 1 ) + 1 ] );
+
 
     MAP_GPIOPinTypeI2C( i2c_gpio_base[ id ], i2c_gpio_pins[ id ] );
     MAP_GPIOPadConfigSet( i2c_gpio_base[ id ], i2c_gpio_pins[ id ], GPIO_STRENGTH_4MA, GPIO_PIN_TYPE_STD_WPU);
@@ -446,17 +458,19 @@ void platform_i2c_send_stop( unsigned id )
 int platform_i2c_send_address( unsigned id, u16 address, int direction )
 {
     MAP_I2CMasterSlaveAddrSet( i2c_base[ id ], address & 0x7F, direction == PLATFORM_I2C_DIRECTION_RECEIVER );
-    MAP_I2CMasterControl( i2c_base[ id ], I2C_MASTER_CMD_QUICK_COMMAND );
 
     return 1;
-
 }
 
 int platform_i2c_send_byte( unsigned id, u8 data )
 {
     MAP_I2CMasterDataPut( i2c_base[ id ], data );
 
-    return 0;
+    MAP_I2CMasterControl( i2c_base[ id ], I2C_MASTER_CMD_SINGLE_SEND );
+
+    while( MAP_I2CMasterBusy( i2c_base[ id ] ) );
+
+    return 1;
 }
 
 int platform_i2c_recv_byte( unsigned id, int ack )
