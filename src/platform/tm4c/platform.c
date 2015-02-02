@@ -414,8 +414,10 @@ void platform_spi_select( unsigned id, int is_select )
 static const u32 i2c_base[] = { I2C0_BASE, I2C1_BASE };
 static const u32 i2c_sysctl[] = { SYSCTL_PERIPH_I2C0, SYSCTL_PERIPH_I2C1 };
 static const u32 i2c_gpio_base[] = { GPIO_PORTB_BASE, GPIO_PORTA_BASE };
-static const u8  i2c_gpio_pins[] = { GPIO_PIN_2 | GPIO_PIN_3,
-                                     GPIO_PIN_6 | GPIO_PIN_7 };
+static const u8  i2c_gpio_sclpins[] = { GPIO_PIN_2,
+                                     GPIO_PIN_6 };
+static const u8 i2c_gpio_sdapins[] = { GPIO_PIN_3,
+                                       GPIO_PIN_7 };
 static const u32 i2c_gpiofunc[] = { GPIO_PB2_I2C0SCL, GPIO_PB3_I2C0SDA,
                                     GPIO_PA6_I2C1SCL, GPIO_PA7_I2C1SDA };
 
@@ -429,18 +431,18 @@ static void i2c_init()
 u32 platform_i2c_setup( unsigned id, u32 speed )
 {
 
-    MAP_I2CMasterDisable( i2c_base[ id ] );
+    MAP_I2CMasterEnable( i2c_base[ id ] );
 
     MAP_GPIOPinConfigure( i2c_gpiofunc[ id << 1 ] );
     MAP_GPIOPinConfigure( i2c_gpiofunc[ ( id << 1 ) + 1 ] );
 
+    MAP_GPIOPinTypeI2C( i2c_gpio_base[ id ], i2c_gpio_sdapins[ id ] );
 
-    MAP_GPIOPinTypeI2C( i2c_gpio_base[ id ], i2c_gpio_pins[ id ] );
-    MAP_GPIOPadConfigSet( i2c_gpio_base[ id ], i2c_gpio_pins[ id ], GPIO_STRENGTH_4MA, GPIO_PIN_TYPE_STD_WPU);
+    HWREG( i2c_gpio_base[ id ] + GPIO_O_PUR ) |= i2c_gpio_sdapins[ id ];
+
+    MAP_GPIOPinTypeI2CSCL( i2c_gpio_base[ id ], i2c_gpio_sclpins[ id ] );
 
     MAP_I2CMasterInitExpClk( i2c_base[ id ], MAP_SysCtlClockGet(), speed == PLATFORM_I2C_SPEED_FAST );
-
-    MAP_I2CMasterEnable( i2c_base[ id ] );
 
     return speed;
 }
@@ -458,6 +460,7 @@ void platform_i2c_send_stop( unsigned id )
 int platform_i2c_send_address( unsigned id, u16 address, int direction )
 {
     MAP_I2CMasterSlaveAddrSet( i2c_base[ id ], address & 0x7F, direction == PLATFORM_I2C_DIRECTION_RECEIVER );
+    MAP_I2CMasterControl( i2c_base[ id ], I2C_MASTER_CMD_SINGLE_SEND );
 
     return 1;
 }
