@@ -420,6 +420,13 @@ static const u8 i2c_gpio_sdapins[] = { GPIO_PIN_3,
                                        GPIO_PIN_7 };
 static const u32 i2c_gpiofunc[] = { GPIO_PB2_I2C0SCL, GPIO_PB3_I2C0SDA,
                                     GPIO_PA6_I2C1SCL, GPIO_PA7_I2C1SDA };
+#define I2C_NO_TRANSFER 0
+#define I2C_START 1
+#define I2C_BULK_TRANSMIT_DELAY 2
+#define I2C_BULK_TRANSMIT 3
+#define I2C_BULK_RECEIVE 3
+
+static u8 i2c_flags[] = { I2C_NO_TRANSFER, I2C_NO_TRANSFER };
 
 static void i2c_init()
 {
@@ -444,17 +451,22 @@ u32 platform_i2c_setup( unsigned id, u32 speed )
 
     MAP_I2CMasterInitExpClk( i2c_base[ id ], MAP_SysCtlClockGet(), speed == PLATFORM_I2C_SPEED_FAST );
 
+    i2c_flags[ id ] = I2C_NO_TRANSFER;
+
     return speed;
 }
 
 void platform_i2c_send_start( unsigned id )
 {
-    MAP_I2CMasterControl( i2c_base[ id ], I2C_MASTER_CMD_BURST_SEND_START );
+
+    i2c_flags[ id ] = I2C_START;
 }
 
 void platform_i2c_send_stop( unsigned id )
 {
     MAP_I2CMasterControl( i2c_base[ id ], I2C_MASTER_CMD_BURST_SEND_FINISH );
+
+    i2c_flags[ id ] = I2C_NO_TRANSFER;
 }
 
 int platform_i2c_send_address( unsigned id, u16 address, int direction )
@@ -466,26 +478,79 @@ int platform_i2c_send_address( unsigned id, u16 address, int direction )
 
 int platform_i2c_send_byte( unsigned id, u8 data )
 {
-    MAP_I2CMasterDataPut( i2c_base[ id ], data );
 
-    MAP_I2CMasterControl( i2c_base[ id ], I2C_MASTER_CMD_SINGLE_SEND );
+    if ( i2c_flags[ id ] == I2C_START )
+    {
+        MAP_I2CMasterDataPut( i2c_base[ id ], data );
+        MAP_I2CMasterControl( i2c_base[ id ], I2C_MASTER_CMD_BURST_SEND_START );
+        i2c_flags[ id ] = I2C_BULK_TRANSMIT_DELAY;
+        while( MAP_I2CMasterBusy( i2c_base[ id ] ) );
+        return 1;
+    }
+    else if ( i2c_flags[ id ] == I2C_NO_TRANSFER )
+    {
+        // No start was sent, so single transfer
+        MAP_I2CMasterControl( i2c_base[ id ], I2C_MASTER_CMD_SINGLE_SEND );
+    }
+    else if ( i2c_flags[ id ] == I2C_BULK_TRANSMIT )
+    {
+        // Start was sent, bulk transfer
+        MAP_I2CMasterControl( i2c_base[ id ], I2C_MASTER_CMD_BURST_SEND_CONT );
+    }
+    else if ( i2c_flags[ id ] == I2C_BULK_TRANSMIT_DELAY )
+    {
+        MAP_I2CMasterDataPut( i2c_base[ id ], data );
+    }
 
-    while( MAP_I2CMasterBusy( i2c_base[ id ] ) );
+    if ( i2c_flags[ id ] != I2C_BULK_TRANSMIT_DELAY )
+    {
+        while( MAP_I2CMasterBusy( i2c_base[ id ] ) );
+
+        MAP_I2CMasterDataPut( i2c_base[ id ], data );
+    }
+    else
+    {
+        i2c_flags[ id ] = I2C_BULK_TRANSMIT;
+    }
 
     return 1;
 }
 
 int platform_i2c_recv_byte( unsigned id, int ack )
 {
-    // MAP_I2CMasterControl( i2c_base[ id ], I2C_MASTER_CMD_BURST_RECEIVE_START );
 
-    MAP_I2CMasterControl( i2c_base[ id ], I2C_MASTER_CMD_SINGLE_RECEIVE );
+    if ( ( i2c_flags[ id ] == I2C_NO_TRANSFER || i2c_flags[ id ] == I2C_START ) && ack ) {
+        // ACK means that there's more than one byte
+        i2c_flags[ id ] = I2C_BULK_RECEIVE;
+
+        MAP_I2CMasterControl( i2c_base[ id ], I2C_MASTER_CMD_BURST_RECEIVE_START );
+
+
+    }
+    else if ( i2c_flags[ id ] == I2C_BULK_RECEIVE )
+    {
+        if( !ack )
+        {
+            i2c_flags[ id ] = I2C_NO_TRANSFER;
+
+            MAP_I2CMasterControl( i2c_base[ id ], I2C_MASTER_CMD_BURST_RECEIVE_FINISH );
+        }
+        else
+        {
+            //
+            MAP_I2CMasterControl( i2c_base[ id ], I2C_MASTER_CMD_BURST_RECEIVE_CONT );
+        }
+
+    }
+    else if( i2c_flags[ id ] == I2C_NO_TRANSFER )
+    {
+        MAP_I2CMasterControl( i2c_base[ id ], I2C_MASTER_CMD_SINGLE_RECEIVE );
+
+    }
 
     while( MAP_I2CMasterBusy( i2c_base[ id ] ) );
 
     u32 data = MAP_I2CMasterDataGet( i2c_base[ id ] );
-
-    // MAP_I2CMasterControl( i2c_base[ id ], (ack == 0 ) ? I2C_MASTER_CMD_BURST_RECEIVE_FINISH : I2C_MASTER_CMD_BURST_RECEIVE_CONT );
 
     return data;
 }
