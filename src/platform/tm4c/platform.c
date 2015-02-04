@@ -460,7 +460,6 @@ void platform_i2c_send_stop( unsigned id )
 int platform_i2c_send_address( unsigned id, u16 address, int direction )
 {
     MAP_I2CMasterSlaveAddrSet( i2c_base[ id ], address & 0x7F, direction == PLATFORM_I2C_DIRECTION_RECEIVER );
-    MAP_I2CMasterControl( i2c_base[ id ], I2C_MASTER_CMD_SINGLE_SEND );
 
     return 1;
 }
@@ -478,9 +477,15 @@ int platform_i2c_send_byte( unsigned id, u8 data )
 
 int platform_i2c_recv_byte( unsigned id, int ack )
 {
+    // MAP_I2CMasterControl( i2c_base[ id ], I2C_MASTER_CMD_BURST_RECEIVE_START );
+
+    MAP_I2CMasterControl( i2c_base[ id ], I2C_MASTER_CMD_SINGLE_RECEIVE );
+
+    while( MAP_I2CMasterBusy( i2c_base[ id ] ) );
+
     u32 data = MAP_I2CMasterDataGet( i2c_base[ id ] );
 
-    MAP_I2CMasterControl( i2c_base[ id ], (ack == 1 ) ? I2C_MASTER_CMD_BURST_RECEIVE_FINISH : I2C_MASTER_CMD_BURST_RECEIVE_ERROR_STOP );
+    // MAP_I2CMasterControl( i2c_base[ id ], (ack == 0 ) ? I2C_MASTER_CMD_BURST_RECEIVE_FINISH : I2C_MASTER_CMD_BURST_RECEIVE_CONT );
 
     return data;
 }
