@@ -39,7 +39,6 @@
 #include "buf.h"
 #include "utils.h"
 
-#if defined( TM4C123GH6PM )
 #define TARGET_IS_BLIZZARD_RB1
 #define PART_TM4C123GH6PM
 #include "driverlib/pin_map.h"
@@ -47,7 +46,6 @@
 #include "driverlib/rom_map.h"
 
 #define UNLOCK_MAGIC_NUM 0x4C4F434B
-#endif
 
 // USB CDC Stuff
 #include "driverlib/usb.h"
@@ -349,13 +347,16 @@ int platform_can_recv( unsigned int id, u32 *canid, u8 *idtype, u8 *len, u8 *dat
 static const u32 spi_base[] = { SSI0_BASE, SSI1_BASE, SSI2_BASE, SSI3_BASE };
 static const u32 spi_sysctl[] = { SYSCTL_PERIPH_SSI0, SYSCTL_PERIPH_SSI1, SYSCTL_PERIPH_SSI2, SYSCTL_PERIPH_SSI3 };
 
-#ifdef TM4C123GH6PM
 static const u32 spi_gpio_base[] = { GPIO_PORTA_BASE, GPIO_PORTF_BASE, GPIO_PORTB_BASE, GPIO_PORTD_BASE };
-static const u8 spi_gpio_pins[] = { GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5,
-                                    GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3,
-                                    GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7,
-                                    GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 };
-#endif
+static const u8 spi_gpio_pins[] = { GPIO_PIN_2 | GPIO_PIN_4 | GPIO_PIN_5,
+                                    GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2,
+                                    GPIO_PIN_4 | GPIO_PIN_6 | GPIO_PIN_7,
+                                    GPIO_PIN_0 | GPIO_PIN_2 | GPIO_PIN_3 };
+
+static const u32 spi_gpiofunc[] = { GPIO_PA2_SSI0CLK, GPIO_PA4_SSI0RX, GPIO_PA5_SSI0TX,
+                                    GPIO_PF0_SSI1RX, GPIO_PF1_SSI1TX, GPIO_PF2_SSI1CLK,
+                                    GPIO_PB4_SSI2CLK, GPIO_PB6_SSI2RX, GPIO_PB7_SSI2TX,
+                                    GPIO_PD0_SSI3CLK, GPIO_PD2_SSI3RX, GPIO_PD3_SSI3TX };
 
 static void spis_init()
 {
@@ -385,6 +386,10 @@ u32 platform_spi_setup( unsigned id, int mode, u32 clock, unsigned cpol, unsigne
     MAP_SSIDisable( spi_base[ id ] );
 
     MAP_GPIOPinTypeSSI( spi_gpio_base[ id ], spi_gpio_pins[ id ] );
+
+    MAP_GPIOPinConfigure( spi_gpiofunc[ id * 3 ] );
+    MAP_GPIOPinConfigure( spi_gpiofunc[ id * 3 + 1 ] );
+    MAP_GPIOPinConfigure( spi_gpiofunc[ id * 3 + 2 ] );
 
     MAP_GPIOPadConfigSet( spi_gpio_base[ id ], spi_gpio_pins[ id ], GPIO_STRENGTH_4MA, GPIO_PIN_TYPE_STD_WPU );
 
