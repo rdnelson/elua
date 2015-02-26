@@ -425,13 +425,16 @@ static const u8 i2c_gpio_sdapins[] = { GPIO_PIN_3,
                                        GPIO_PIN_7 };
 static const u32 i2c_gpiofunc[] = { GPIO_PB2_I2C0SCL, GPIO_PB3_I2C0SDA,
                                     GPIO_PA6_I2C1SCL, GPIO_PA7_I2C1SDA };
-#define I2C_NO_TRANSFER 0
-#define I2C_START 1
-#define I2C_BULK_TRANSMIT_DELAY 2
-#define I2C_BULK_TRANSMIT 3
-#define I2C_BULK_RECEIVE 3
+enum I2CStates
+{
+    I2C_NO_TRANSFER,
+    I2C_START,
+    I2C_BULK_TRANSMIT_DELAY,
+    I2C_BULK_TRANSMIT,
+    I2C_BULK_RECEIVE,
+};
 
-static u8 i2c_flags[] = { I2C_NO_TRANSFER, I2C_NO_TRANSFER };
+static enum I2CStates i2c_flags[] = { I2C_NO_TRANSFER, I2C_NO_TRANSFER };
 
 static void i2c_init()
 {
@@ -524,7 +527,7 @@ int platform_i2c_send_byte( unsigned id, u8 data )
 int platform_i2c_recv_byte( unsigned id, int ack )
 {
 
-    if ( ( i2c_flags[ id ] == I2C_NO_TRANSFER || i2c_flags[ id ] == I2C_START ) && ack ) {
+    if ( ( i2c_flags[ id ] != I2C_BULK_RECEIVE ) && ack ) {
         // ACK means that there's more than one byte
         i2c_flags[ id ] = I2C_BULK_RECEIVE;
 
@@ -547,10 +550,9 @@ int platform_i2c_recv_byte( unsigned id, int ack )
         }
 
     }
-    else if( i2c_flags[ id ] == I2C_NO_TRANSFER )
+    else
     {
         MAP_I2CMasterControl( i2c_base[ id ], I2C_MASTER_CMD_SINGLE_RECEIVE );
-
     }
 
     while( MAP_I2CMasterBusy( i2c_base[ id ] ) );
