@@ -12,7 +12,7 @@ if cpu == 'TM4C123GXL' then
   addi( sf( 'src/platform/%s/usblib/device', platform ) )
 end
 
-specific_files = "startup_gcc.c platform.c platform_int.c proxima.c" -- tm4c_pio.c"
+specific_files = "startup_gcc.c platform.c platform_int.c mpu_help.c proxima.c" -- tm4c_pio.c"
 local fwlib_files = utils.get_files( "src/platform/" .. platform .. "/driverlib", ".*%.c$" )
 
 

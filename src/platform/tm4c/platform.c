@@ -456,6 +456,7 @@ u32 platform_i2c_setup( unsigned id, u32 speed )
     HWREG( i2c_gpio_base[ id ] + GPIO_O_PUR ) |= i2c_gpio_sdapins[ id ];
 
     MAP_GPIOPinTypeI2CSCL( i2c_gpio_base[ id ], i2c_gpio_sclpins[ id ] );
+    MAP_GPIOPadConfigSet( i2c_gpio_base[ id ], i2c_gpio_sclpins[ id ], GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
 
     MAP_I2CMasterInitExpClk( i2c_base[ id ], MAP_SysCtlClockGet(), speed == PLATFORM_I2C_SPEED_FAST );
 
