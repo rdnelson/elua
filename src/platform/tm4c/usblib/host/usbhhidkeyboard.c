@@ -488,7 +488,7 @@ UpdateKeyboardState(tUSBHKeyboard *psKbInstance)
         //
         // If there is no old key pressed in this entry go to the next one.
         //
-        if(psKbInstance->pui8KeyState[i32OldKey] == 0)
+        if(psKbInstance->pui8KeyState[i32OldKey-2] == 0)
         {
             continue;
         }
@@ -503,7 +503,7 @@ UpdateKeyboardState(tUSBHKeyboard *psKbInstance)
             // Break out if the key is still present.
             //
             if(psKbInstance->pui8Buffer[i32NewKey] ==
-               psKbInstance->pui8KeyState[i32OldKey])
+               psKbInstance->pui8KeyState[i32OldKey-2])
             {
                 break;
             }
@@ -518,12 +518,12 @@ UpdateKeyboardState(tUSBHKeyboard *psKbInstance)
             // Send the key release notification to the application.
             //
             psKbInstance->pfnCallback(0, USBH_EVENT_HID_KB_REL,
-                                      psKbInstance->pui8KeyState[i32OldKey],
+                                      psKbInstance->pui8KeyState[i32OldKey-2],
                                       0);
             //
             // Remove the old key from the currently held key list.
             //
-            psKbInstance->pui8KeyState[i32OldKey] = 0;
+            psKbInstance->pui8KeyState[i32OldKey-2] = 0;
 
         }
     }
@@ -550,7 +550,7 @@ UpdateKeyboardState(tUSBHKeyboard *psKbInstance)
             // If it is in both lists then it was already pressed so ignore it.
             //
             if(psKbInstance->pui8Buffer[i32NewKey] ==
-               psKbInstance->pui8KeyState[i32OldKey])
+               psKbInstance->pui8KeyState[i32OldKey-2])
             {
                 break;
             }
@@ -569,12 +569,12 @@ UpdateKeyboardState(tUSBHKeyboard *psKbInstance)
                 // If an empty location is found, store it and notify the
                 // application.
                 //
-                if(psKbInstance->pui8KeyState[i32OldKey] == 0)
+                if(psKbInstance->pui8KeyState[i32OldKey-2] == 0)
                 {
                     //
                     // Save the newly pressed key.
                     //
-                    psKbInstance->pui8KeyState[i32OldKey] =
+                    psKbInstance->pui8KeyState[i32OldKey-2] =
                                         psKbInstance->pui8Buffer[i32NewKey];
 
                     //
