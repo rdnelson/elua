@@ -22,10 +22,13 @@ if cpu == 'TM4C123GXL' then
    specific_files = specific_files .. "  usb_serial_structs.c"
 end
 
+local proxima_files = utils.get_files( "src/platform/" .. platform .. "/proxima", ".*%.c$" )
+
 ldscript = "tm4c.ld"
 
 -- Prepend with path
 specific_files = fwlib_files .. " " .. utils.prepend_path( specific_files, "src/platform/" .. platform )
+specific_files = specific_files .. " " .. proxima_files
 specific_files = specific_files .. " src/platform/cortex_utils.s src/platform/arm_cortex_interrupts.c"
 ldscript = sf( "src/platform/%s/%s", platform, ldscript )
 

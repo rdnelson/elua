@@ -15,7 +15,9 @@
 #include "rom.h"
 #include "rom_map.h"
 
-#include "mpu_help.h"
+#include "proxima/accel.h"
+#include "proxima/gyro.h"
+#include "proxima/led.h"
 
 #if LUA_OPTIMIZE_MEMORY == 0
 #error "Proxima module is requires lua LTR"
@@ -27,9 +29,6 @@ static int tm4c_proxima_mt_index( lua_State* L )
     return 0;
 }
 
-#include "led.inc.c"
-#include "accel.inc.c"
-#include "gyro.inc.c"
 
 #define MIN_OPT_LEVEL 2
 #include "lrodefs.h"
@@ -69,9 +68,9 @@ const LUA_REG_TYPE proxima_map[] =
 {
     { LSTRKEY( "__index" ), LFUNCVAL( tm4c_proxima_mt_index ) },
     { LSTRKEY( "__metatable" ), LROVAL( proxima_map ) },
-    { LSTRKEY( "led" ), LROVAL( led_map ) },
     { LSTRKEY( "accel" ), LROVAL( accel_map ) },
     { LSTRKEY( "gyro" ), LROVAL( gyro_map ) },
+    { LSTRKEY( "led" ), LROVAL( led_map ) },
     { LNILKEY, LNILVAL },
 };
 

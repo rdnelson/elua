@@ -1,3 +1,11 @@
+#include "gyro.h"
+
+#include "lualib.h"
+#include "lrotable.h"
+#include "platform.h"
+
+#include "mpu_help.h"
+
 #define NOT_INIT    0
 #define INIT        1
 
@@ -5,9 +13,9 @@
 #define MPU_GYRO_Y         0x45
 #define MPU_GYRO_Z         0x47
 
-static unsigned char gyro_state = NOT_INIT;
+unsigned char gyro_state = NOT_INIT;
 
-static int proxima_gyro_init( lua_State* L )
+int proxima_gyro_init( lua_State* L )
 {
     platform_i2c_setup( 1, PLATFORM_I2C_SPEED_FAST );
     gyro_state = INIT;
@@ -22,7 +30,7 @@ static int proxima_gyro_init( lua_State* L )
 }
 
 
-static int proxima_gyro_get_x( lua_State* L )
+int proxima_gyro_get_x( lua_State* L )
 {
     short data;
 
@@ -35,7 +43,7 @@ static int proxima_gyro_get_x( lua_State* L )
     return 1;
 }
 
-static int proxima_gyro_get_y( lua_State* L )
+int proxima_gyro_get_y( lua_State* L )
 {
     short data;
 
@@ -48,7 +56,7 @@ static int proxima_gyro_get_y( lua_State* L )
     return 1;
 }
 
-static int proxima_gyro_get_z( lua_State* L )
+int proxima_gyro_get_z( lua_State* L )
 {
     short data;
 
