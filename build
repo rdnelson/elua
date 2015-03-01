@@ -5,5 +5,5 @@ lua5.1 ./build_elua.lua board=EK-TM4C123GXL boot=luarpc
 if [ $? == 0 ]
 then
     arm-none-eabi-objcopy -O binary ./elua_lua_ek-tm4c123gxl.elf ./payload.bin
-    lm4flash ./payload.bin
+    lm4flash -Ev ./payload.bin
 fi
