@@ -1,7 +1,5 @@
 #include "accel.h"
 
-#include "lualib.h"
-#include "lrotable.h"
 #include "platform.h"
 
 #include "mpu_help.h"

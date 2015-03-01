@@ -1,7 +1,5 @@
 #include "gyro.h"
 
-#include "lualib.h"
-#include "lrotable.h"
 #include "platform.h"
 
 #include "mpu_help.h"
@@ -35,7 +33,7 @@ int proxima_gyro_get_x( lua_State* L )
     short data;
 
     if ( gyro_state != INIT )
-        return luaL_error( L,  "Gyroscope must be initialized.");
+        proxima_gyro_init( L );
 
     proxima_help_reg_read_word(MPU_ADDR, MPU_GYRO_X, &data);
     lua_pushinteger( L, data );
@@ -48,7 +46,7 @@ int proxima_gyro_get_y( lua_State* L )
     short data;
 
     if ( gyro_state != INIT )
-        return luaL_error( L,  "Gyroscope must be initialized.");
+        proxima_gyro_init( L );
 
     proxima_help_reg_read_word(MPU_ADDR, MPU_GYRO_Y, &data);
     lua_pushinteger( L, data );
@@ -61,7 +59,7 @@ int proxima_gyro_get_z( lua_State* L )
     short data;
 
     if ( gyro_state != INIT )
-        return luaL_error( L,  "Gyroscope must be initialized.");
+        proxima_gyro_init( L );
 
     proxima_help_reg_read_word(MPU_ADDR, MPU_GYRO_Z, &data);
     lua_pushinteger( L, data );
