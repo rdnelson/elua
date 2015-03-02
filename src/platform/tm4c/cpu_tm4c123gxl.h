@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "proxima/spi_help.h"
+
 #include "driverlib/sysctl.h"
 #include "rom_map.h"
 #include "stacks.h"
@@ -40,6 +42,13 @@
 #define INTERNAL_FLASH_WRITE_UNIT_SIZE  4
 #define INTERNAL_FLASH_SECTOR_SIZE      1024
 #define INTERNAL_FLASH_START_ADDRESS    0
+
+// SD Card info
+#define MMCFS_SPI_NUM 2
+#define MMCFS_CUSTOM_CS
+#define MMCFS_SELECT_FUNC(a) select_chip(1)
+#define MMCFS_DESELECT_FUNC(a) select_chip(0)
+#define MMCFS_CSSETUP_FUNC setup_select
 
 #define SRAM_SIZE ( 0x8000 )
 // Allocator data: define your free memory zones here in two arrays

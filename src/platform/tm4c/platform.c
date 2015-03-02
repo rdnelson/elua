@@ -55,6 +55,8 @@
 #include "usblib/device/usbdcdc.h"
 #include "usb_serial_structs.h"
 
+#include "proxima/spi_help.h"
+
 #define SYSTICKHZ       5
 #define SYSTICKMS       (1000 / SYSTICKHZ)
 
@@ -97,6 +99,11 @@ int platform_init()
 
 #if NUM_SPI > 0
     spis_init();
+#endif
+
+#ifdef BUILD_MMCFS
+    setup_select();
+    select_chip(0);
 #endif
 
 #if NUM_I2C > 0

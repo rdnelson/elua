@@ -16,6 +16,8 @@
 #undef BUILD_ADC
 #endif
 
+#define BUILD_MMCFS
+
 /*
 #define PLATFORM_CPU_CONSTANTS_PLATFORM\
   _C( INT_GPIOA ),\
