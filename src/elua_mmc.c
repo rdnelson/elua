@@ -38,29 +38,60 @@
   #error "MMC not supported on this board"
 #endif
 
+#ifndef MMCFS_CUSTOM_CS
 #if defined( MMCFS_CS_PORT )
 const u8 mmcfs_cs_ports[ NUM_CARDS ] = { MMCFS_CS_PORT };
 static const u8 mmcfs_cs_pins[ NUM_CARDS ] = { MMCFS_CS_PIN };
-static const u8 mmcfs_spi_nums[ NUM_CARDS ] = { MMCFS_SPI_NUM };
 #elif defined( MMCFS_CS_PORT_ARRAY )
 const u8 mmcfs_cs_ports[ NUM_CARDS ] = MMCFS_CS_PORT_ARRAY;
 static const u8 mmcfs_cs_pins[ NUM_CARDS ] = MMCFS_CS_PIN_ARRAY;
-static const u8 mmcfs_spi_nums[ NUM_CARDS ] = MMCFS_SPI_NUM_ARRAY;
+#endif
+#else
+#if NUM_CARDS == 1
+static const u8 mmcfs_spi_nums[ NUM_CARDS ] = { MMCFS_SPI_NUM };
+#else
+static const u8 mmcfs_spi_nums[ NUM_CARDS ] = { MMCFS_SPI_NUM_ARRAY };
+#endif
 #endif
 
+
+
+#ifndef MMCFS_SELECT_FUNC
 // asserts the CS pin to the card
 static
 void SELECT (BYTE id)
 {
     platform_pio_op( mmcfs_cs_ports[ id ] , ( ( u32 ) 1 << mmcfs_cs_pins[ id ] ), PLATFORM_IO_PIN_CLEAR );    
 }
+#else
 
+#define SELECT(a) MMCFS_SELECT_FUNC(a)
+
+#endif
+
+#ifndef MMCFS_DESELECT_FUNC
 // de-asserts the CS pin to the card
 static
 void DESELECT (BYTE id)
 {
     platform_pio_op( mmcfs_cs_ports[ id ], ( ( u32 ) 1 << mmcfs_cs_pins[ id ] ), PLATFORM_IO_PIN_SET );
 }
+#else
+
+#define DESELECT(a) MMCFS_DESELECT_FUNC(a)
+
+#endif
+
+#ifndef MMCFS_CSSETUP_FUNC
+
+#define CSSETUP( id ) platform_pio_op( mmcfs_cs_ports[ id ], ( ( u32 ) 1 << mmcfs_cs_pins[ id ] ), PLATFORM_IO_PIN_DIR_OUTPUT )
+
+#else
+
+#define CSSETUP( id ) MMCFS_SELECT_FUNC(id)
+
+#endif
+
 
 
 /*--------------------------------------------------------------------------
@@ -162,7 +193,7 @@ void power_on (BYTE id)
      */
     
     // Setup CS pin & deselect
-    platform_pio_op( mmcfs_cs_ports[ id ], ( ( u32 ) 1 << mmcfs_cs_pins[ id ] ), PLATFORM_IO_PIN_DIR_OUTPUT );
+    CSSETUP( id );
     //platform_pio_op( MMCFS_CS_PORT, ( ( u32 ) 1 << MMCFS_CS_PIN ), PLATFORM_IO_PIN_PULLUP );
     DESELECT( id );
     
