@@ -1,9 +1,10 @@
 #!/bin/bash
 
-lua5.1 ./build_elua.lua board=EK-TM4C123GXL boot=luarpc
+lua5.1 ./build_elua.lua board=EK-TM4C123GXL #boot=luarpc
 
 if [ $? == 0 ]
 then
-    arm-none-eabi-objcopy -O binary ./elua_lua_ek-tm4c123gxl.elf ./payload.bin
-    lm4flash -Ev ./payload.bin
+    arm-none-eabi-objcopy -O binary ./elua_lua_ek-tm4c123gxl.elf ./payload.hex
+    cp ./elua_lua_ek-tm4c123gxl.elf payload.bin
+    lm4flash -v ./payload.hex
 fi
