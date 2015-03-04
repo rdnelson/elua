@@ -16,6 +16,7 @@
 #include "rom_map.h"
 
 #include "proxima/accel.h"
+#include "proxima/buttons.h"
 #include "proxima/dac.h"
 #include "proxima/gyro.h"
 #include "proxima/led.h"
@@ -74,11 +75,19 @@ const LUA_REG_TYPE dac_map[] =
     { LNILKEY, LNILVAL },
 };
 
+const LUA_REG_TYPE button_map[] =
+{
+    { LSTRKEY("wait"), LFUNCVAL( proxima_buttons_wait ) },
+    { LSTRKEY("check"), LFUNCVAL( proxima_buttons_check ) },
+    { LNILKEY, LNILVAL },
+};
+
 const LUA_REG_TYPE proxima_map[] =
 {
     { LSTRKEY( "__index" ), LFUNCVAL( tm4c_proxima_mt_index ) },
     { LSTRKEY( "__metatable" ), LROVAL( proxima_map ) },
     { LSTRKEY( "accel" ), LROVAL( accel_map ) },
+    { LSTRKEY( "buttons" ), LROVAL( button_map ) },
     { LSTRKEY( "dac" ), LROVAL( dac_map ) },
     { LSTRKEY( "gyro" ), LROVAL( gyro_map ) },
     { LSTRKEY( "led" ), LROVAL( led_map ) },
