@@ -138,8 +138,9 @@ int platform_init()
     MAP_SysTickPeriodSet( MAP_SysCtlClockGet() / SYSTICKHZ );
     MAP_SysTickEnable();
     MAP_SysTickIntEnable();
-    MAP_IntMasterEnable();
 #endif
+
+    MAP_IntMasterEnable();
 
     return PLATFORM_OK;
 }
@@ -830,6 +831,194 @@ int platform_s_timer_set_match_int( unsigned id, timer_data_type period_us, int 
 // TODO: Skipping PWMs for now.
 
 // TODO: Skipping ADCs fow now
+
+#ifdef BUILD_ADC
+
+const static u32 adc_ports[] = { GPIO_PORTE_BASE, GPIO_PORTE_BASE, GPIO_PORTE_BASE, GPIO_PORTE_BASE,
+                                 GPIO_PORTD_BASE, GPIO_PORTD_BASE, GPIO_PORTD_BASE, GPIO_PORTD_BASE,
+                                 GPIO_PORTE_BASE, GPIO_PORTE_BASE, GPIO_PORTB_BASE, GPIO_PORTB_BASE };
+
+const static u8 adc_pins[] = { GPIO_PIN_3, GPIO_PIN_2, GPIO_PIN_1, GPIO_PIN_0,
+                               GPIO_PIN_3, GPIO_PIN_2, GPIO_PIN_1, GPIO_PIN_0,
+                               GPIO_PIN_5, GPIO_PIN_4, GPIO_PIN_5, GPIO_PIN_4 };
+
+const static u32 adc_ctls[] = { ADC_CTL_CH0, ADC_CTL_CH1, ADC_CTL_CH2, ADC_CTL_CH3,
+                                ADC_CTL_CH4, ADC_CTL_CH5, ADC_CTL_CH6, ADC_CTL_CH7,
+                                ADC_CTL_CH8, ADC_CTL_CH9, ADC_CTL_CH10, ADC_CTL_CH11 };
+
+const static u32 adc_ints[] = { INT_ADC0SS0, INT_ADC0SS1, INT_ADC0SS2, INT_ADC0SS3 };
+
+int platform_adc_check_timer_id( unsigned id, unsigned timer_id )
+{
+    return ( ( timer_id >= ADC_TIMER_FIRST_ID ) && ( timer_id < ( ADC_TIMER_FIRST_ID + ADC_NUM_TIMERS ) ) );
+}
+
+void platform_adc_stop( unsigned id )
+{
+    elua_adc_ch_state *ch_state = adc_get_ch_state( id );
+    elua_adc_dev_state *dev_state = adc_get_dev_state( 0 );
+
+    ch_state->op_pending = 0;
+    INACTIVATE_CHANNEL( dev_state, id );
+
+    if ( dev_state->ch_active == 0 )
+    {
+        MAP_ADCSequenceDisable( ADC0_BASE, dev_state->seq_id );
+        dev_state->running = 0;
+    }
+}
+
+void ADCIntHandler( void )
+{
+    u32 tmpbuff[ NUM_ADC ];
+    elua_adc_dev_state *dev_state = adc_get_dev_state( 0 );
+    elua_adc_ch_state *ch_state;
+
+    MAP_ADCIntClear( ADC0_BASE, dev_state->seq_id );
+    MAP_ADCSequenceDataGet( ADC0_BASE, dev_state->seq_id, tmpbuff );
+
+    dev_state->seq_ctr = 0;
+
+    while( dev_state->seq_ctr < dev_state->seq_len )
+    {
+        ch_state = dev_state->ch_state[ dev_state->seq_ctr ];
+        dev_state->sample_buf[ dev_state->seq_ctr ] = ( u16 )tmpbuff[ dev_state->seq_ctr ];
+        ch_state->value_fresh = 1;
+
+        if ( ch_state->logsmoothlen > 0 && ch_state->smooth_ready == 0)
+        {
+            adc_smooth_data( ch_state->id );
+        }
+
+#ifdef BUF_ENABLE_ADC
+        else if ( ch_state->reqsamples > 1 )
+        {
+            buf_write( BUF_ID_ADC, ch_state->id, ( t_buf_data* )ch_state->value_ptr );
+            ch_state->value_fresh = 0;
+        }
+#endif
+
+        if ( adc_samples_available( ch_state->id ) >= ch_state->reqsamples && ch_state->freerunning == 0 )
+        {
+            platform_adc_stop( ch_state->id );
+        }
+
+        dev_state->seq_ctr++;
+    }
+
+    dev_state->seq_ctr = 0;
+
+    if ( dev_state->running == 1 )
+    {
+        adc_update_dev_sequence( 0 );
+    }
+
+    if ( dev_state->clocked == 0 && dev_state->running == 1 )
+    {
+        MAP_ADCProcessorTrigger( ADC0_BASE, dev_state->seq_id );
+    }
+}
+
+static void adcs_init()
+{
+    unsigned id;
+    elua_adc_dev_state *dev_state = adc_get_dev_state( 0 );
+
+    MAP_SysCtlADCSpeedSet( SYSCTL_ADCSPEED_500KSPS );
+    MAP_SysCtlADCSpeedSet( SYSCTL_ADCSPEED_1MSPS );
+
+    MAP_SysCtlPeripheralEnable( SYSCTL_PERIPH_ADC0 );
+
+    for( id = 0; id < NUM_ADC; id++ )
+    {
+        adc_init_ch_state( id );
+    }
+
+    platform_adc_set_clock( 0, 0 );
+
+    MAP_ADCIntEnable( ADC0_BASE, dev_state->seq_id );
+    MAP_IntEnable( adc_ints[ 0 ] );
+}
+
+u32 platform_adc_set_clock( unsigned id, u32 frequency )
+{
+    elua_adc_dev_state *dev_state = adc_get_dev_state( 0 );
+
+    MAP_ADCSequenceDisable( ADC0_BASE, dev_state->seq_id );
+
+    if ( frequency > 0 )
+    {
+        dev_state->clocked = 1;
+
+        MAP_ADCSequenceConfigure( ADC0_BASE, dev_state->seq_id, ADC_TRIGGER_TIMER, dev_state->seq_id );
+        MAP_TimerLoadSet( timer_base[ dev_state->timer_id ], TIMER_A, MAP_SysCtlClockGet() / frequency );
+        frequency = MAP_SysCtlClockGet() / MAP_TimerLoadGet( timer_base[ dev_state->timer_id ], TIMER_A );
+    }
+    else
+    {
+        dev_state->clocked = 0;
+
+        MAP_ADCSequenceConfigure( ADC0_BASE, dev_state->seq_id, ADC_TRIGGER_PROCESSOR, dev_state->seq_id );
+    }
+
+    return frequency;
+}
+
+int platform_adc_update_sequence()
+{
+    elua_adc_dev_state *dev_state = adc_get_dev_state( 0 );
+
+    MAP_ADCSequenceDisable( ADC0_BASE, dev_state->seq_id );
+
+    dev_state->seq_ctr = 0;
+
+    while( dev_state->seq_ctr < dev_state->seq_len - 1 )
+    {
+        MAP_ADCSequenceStepConfigure( ADC0_BASE, dev_state->seq_id, dev_state->seq_ctr, adc_ctls[ dev_state->ch_state[ dev_state->seq_ctr ]->id ] | ADC_CTL_IE );
+
+        dev_state->seq_ctr++;
+    }
+
+    if ( dev_state->seq_ctr < 8 ) {
+        MAP_ADCSequenceStepConfigure( ADC0_BASE, dev_state->seq_id, dev_state->seq_ctr, ADC_CTL_END );
+    }
+
+#ifdef ADC_PIN_CONFIG
+    MAP_GPIOPinTypeADC( adc_ports[ dev_state->ch_state[ dev_state->seq_ctr ]->id ], adc_pins[ dev_state->ch_state[ dev_state->seq_ctr ]->id ] );
+#endif
+    dev_state->seq_ctr = 0;
+
+    MAP_ADCSequenceEnable( ADC0_BASE, dev_state->seq_id );
+
+    return PLATFORM_OK;
+}
+
+int platform_adc_start_sequence()
+{
+    elua_adc_dev_state *dev_state = adc_get_dev_state( 0 );
+
+    if ( dev_state->running != 1 )
+    {
+        adc_update_dev_sequence( 0 );
+
+        MAP_ADCSequenceEnable( ADC0_BASE, dev_state->seq_id );
+        dev_state->running = 1;
+
+        if ( dev_state->clocked == 1 )
+        {
+            MAP_TimerControlTrigger( timer_base[ dev_state->timer_id ], TIMER_A, true );
+            MAP_TimerEnable( timer_base[ dev_state->timer_id ], TIMER_A );
+        }
+        else
+        {
+            MAP_ADCProcessorTrigger( ADC0_BASE, dev_state->seq_id );
+        }
+    }
+
+    return PLATFORM_OK;
+}
+
+#endif
 
 void SysTickIntHandler()
 {

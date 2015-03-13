@@ -32,6 +32,7 @@
 #include "uart.h"
 
 #include "cpu_tm4c123gxl.h"
+#include "platform_generic.h"
 #include "stacks.h"
 
 

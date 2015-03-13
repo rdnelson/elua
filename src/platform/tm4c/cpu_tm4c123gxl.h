@@ -3,6 +3,9 @@
 #ifndef __CPU_TM4C123GXL_H__
 #define __CPU_TM4C123GXL_H__
 
+#define TARGET_IS_BLIZZARD_RB1
+#define PART_TM4C123GH6PM
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -20,11 +23,12 @@
 #define NUM_UART              7
 #define NUM_TIMER             6
 #define NUM_PWM               0
-#define NUM_ADC               0
+#define NUM_ADC               12
 #define NUM_CAN               0
 #define NUM_I2C               2
 
 #define ADC_BIT_RESOLUTION    10
+#define ADC_PIN_CONFIG
 
 // CPU frequency (needed by the CPU module and MMCFS code, 0 if not used)
 #define CPU_FREQUENCY         MAP_SysCtlClockGet()
