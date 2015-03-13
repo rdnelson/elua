@@ -732,7 +732,9 @@ void platform_s_timer_delay( unsigned id, timer_data_type delay_us )
     u32 base = timer_base[ id ];
 
     final = 0xFFFFFFFF - ( ( ( u64 )delay_us * MAP_SysCtlClockGet() ) / 1000000 );
+    MAP_TimerDisable( timer_base[ id ], TIMER_A );
     MAP_TimerLoadSet( base, TIMER_A, 0xFFFFFFFF );
+    MAP_TimerEnable( timer_base[ id ], TIMER_A );
     while( MAP_TimerValueGet( base, TIMER_A ) > final );
 }
 
