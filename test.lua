@@ -66,4 +66,40 @@ end
 
 print("End Button Test")
 
+-- Third test, Accelerometer
+
+print("Beginning Accelerometer Test")
+
+accel.init()
+
+if accel.getid() ~= 104 then
+    print("INVALID MPU ID - Test FAILED")
+end
+
+print("Place board horizontally")
+pause()
+pause()
+
+x = accel.getx()
+y = accel.gety()
+z = accel.getz()
+
+if math.abs(x) < 1000 then
+    print("X Axis ok")
+else
+    print("Unexpected X value")
+end
+if math.abs(y) < 1000 then
+    print("Y Axis ok")
+else
+    print("Unexpected Y value")
+end
+if math.abs(z) > 10000 then
+    print("Z Axis ok")
+else
+    print("Unexpected Z value")
+end
+
+print("Ending Accelerometer Test")
+
 os.exit()
