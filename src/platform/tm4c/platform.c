@@ -974,9 +974,13 @@ int platform_adc_update_sequence()
 
     dev_state->seq_ctr = 0;
 
-    while( dev_state->seq_ctr < dev_state->seq_len - 1 )
+    while( dev_state->seq_ctr < dev_state->seq_len )
     {
-        MAP_ADCSequenceStepConfigure( ADC0_BASE, dev_state->seq_id, dev_state->seq_ctr, adc_ctls[ dev_state->ch_state[ dev_state->seq_ctr ]->id ] | ADC_CTL_IE );
+        MAP_ADCSequenceStepConfigure( ADC0_BASE, dev_state->seq_id, dev_state->seq_ctr, adc_ctls[ dev_state->ch_state[ dev_state->seq_ctr ]->id ] | ((dev_state->seq_ctr == (dev_state->seq_len - 1)) ? ADC_CTL_IE : 0));
+
+#ifdef ADC_PIN_CONFIG
+        MAP_GPIOPinTypeADC( adc_ports[ dev_state->ch_state[ dev_state->seq_ctr ]->id ], adc_pins[ dev_state->ch_state[ dev_state->seq_ctr ]->id ] );
+#endif
 
         dev_state->seq_ctr++;
     }
@@ -985,9 +989,6 @@ int platform_adc_update_sequence()
         MAP_ADCSequenceStepConfigure( ADC0_BASE, dev_state->seq_id, dev_state->seq_ctr, ADC_CTL_END );
     }
 
-#ifdef ADC_PIN_CONFIG
-    MAP_GPIOPinTypeADC( adc_ports[ dev_state->ch_state[ dev_state->seq_ctr ]->id ], adc_pins[ dev_state->ch_state[ dev_state->seq_ctr ]->id ] );
-#endif
     dev_state->seq_ctr = 0;
 
     MAP_ADCSequenceEnable( ADC0_BASE, dev_state->seq_id );
