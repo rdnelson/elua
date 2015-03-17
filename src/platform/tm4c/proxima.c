@@ -22,6 +22,7 @@
 #include "proxima/gyro.h"
 #include "proxima/led.h"
 #include "proxima/lcd.h"
+#include "proxima/motors.h"
 
 #if LUA_OPTIMIZE_MEMORY == 0
 #error "Proxima module is requires lua LTR"
@@ -102,6 +103,16 @@ const LUA_REG_TYPE proxima_adc_map[] =
     { LNILKEY, LNILVAL },
 };
 
+const LUA_REG_TYPE proxima_mc_map[] =
+{
+    { LSTRKEY("forward"), LFUNCVAL( proxima_motors_forward ) },
+    { LSTRKEY("reverse"), LFUNCVAL( proxima_motors_reverse ) },
+    { LSTRKEY("right"), LFUNCVAL( proxima_motors_right ) },
+    { LSTRKEY("left"), LFUNCVAL( proxima_motors_left ) },
+    { LSTRKEY("stop"), LFUNCVAL( proxima_motors_stop ) },
+    { LNILKEY, LNILVAL },
+};
+
 const LUA_REG_TYPE proxima_map[] =
 {
     { LSTRKEY( "__index" ), LFUNCVAL( tm4c_proxima_mt_index ) },
@@ -113,6 +124,7 @@ const LUA_REG_TYPE proxima_map[] =
     { LSTRKEY( "gyro" ), LROVAL( gyro_map ) },
     { LSTRKEY( "lcd" ), LROVAL( lcd_map ) },
     { LSTRKEY( "led" ), LROVAL( led_map ) },
+    { LSTRKEY( "motors" ), LROVAL( proxima_mc_map ) },
     { LNILKEY, LNILVAL },
 };
 
