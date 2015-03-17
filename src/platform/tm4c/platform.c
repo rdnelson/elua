@@ -842,7 +842,7 @@ const static u32 adc_ports[] = { GPIO_PORTE_BASE, GPIO_PORTE_BASE, GPIO_PORTE_BA
 
 const static u8 adc_pins[] = { GPIO_PIN_3, GPIO_PIN_2, GPIO_PIN_1, GPIO_PIN_0,
                                GPIO_PIN_3, GPIO_PIN_2, GPIO_PIN_1, GPIO_PIN_0,
-                               GPIO_PIN_5, GPIO_PIN_4, GPIO_PIN_5, GPIO_PIN_4 };
+                               GPIO_PIN_5, GPIO_PIN_4, GPIO_PIN_4, GPIO_PIN_5 };
 
 const static u32 adc_ctls[] = { ADC_CTL_CH0, ADC_CTL_CH1, ADC_CTL_CH2, ADC_CTL_CH3,
                                 ADC_CTL_CH4, ADC_CTL_CH5, ADC_CTL_CH6, ADC_CTL_CH7,
@@ -876,7 +876,8 @@ void ADCIntHandler( void )
     elua_adc_dev_state *dev_state = adc_get_dev_state( 0 );
     elua_adc_ch_state *ch_state;
 
-    MAP_ADCIntClear( ADC0_BASE, dev_state->seq_id );
+    while (MAP_ADCBusy( ADC0_BASE ));
+
     MAP_ADCSequenceDataGet( ADC0_BASE, dev_state->seq_id, tmpbuff );
 
     dev_state->seq_ctr = 0;
@@ -919,6 +920,8 @@ void ADCIntHandler( void )
     {
         MAP_ADCProcessorTrigger( ADC0_BASE, dev_state->seq_id );
     }
+
+    MAP_ADCIntClear( ADC0_BASE, dev_state->seq_id );
 }
 
 static void adcs_init()

@@ -16,10 +16,12 @@
 #include "rom_map.h"
 
 #include "proxima/accel.h"
+#include "proxima/adc.h"
 #include "proxima/buttons.h"
 #include "proxima/dac.h"
 #include "proxima/gyro.h"
 #include "proxima/led.h"
+#include "proxima/lcd.h"
 
 #if LUA_OPTIMIZE_MEMORY == 0
 #error "Proxima module is requires lua LTR"
@@ -82,14 +84,34 @@ const LUA_REG_TYPE button_map[] =
     { LNILKEY, LNILVAL },
 };
 
+const LUA_REG_TYPE lcd_map[] =
+{
+    { LSTRKEY("init"), LFUNCVAL( proxima_lcd_init ) },
+    { LSTRKEY("pic"), LFUNCVAL( proxima_lcd_pic ) },
+    { LNILKEY, LNILVAL },
+};
+
+const LUA_REG_TYPE proxima_adc_map[] =
+{
+    { LSTRKEY("geta"), LFUNCVAL( proxima_adc_geta ) },
+    { LSTRKEY("getb"), LFUNCVAL( proxima_adc_getb ) },
+    { LSTRKEY("getleft"), LFUNCVAL( proxima_adc_getleft ) },
+    { LSTRKEY("getright"), LFUNCVAL( proxima_adc_getright ) },
+    { LSTRKEY("getcenter"), LFUNCVAL( proxima_adc_getcenter ) },
+    { LSTRKEY("getknob"), LFUNCVAL( proxima_adc_getknob ) },
+    { LNILKEY, LNILVAL },
+};
+
 const LUA_REG_TYPE proxima_map[] =
 {
     { LSTRKEY( "__index" ), LFUNCVAL( tm4c_proxima_mt_index ) },
     { LSTRKEY( "__metatable" ), LROVAL( proxima_map ) },
     { LSTRKEY( "accel" ), LROVAL( accel_map ) },
+    { LSTRKEY( "adc" ), LROVAL( proxima_adc_map ) },
     { LSTRKEY( "buttons" ), LROVAL( button_map ) },
     { LSTRKEY( "dac" ), LROVAL( dac_map ) },
     { LSTRKEY( "gyro" ), LROVAL( gyro_map ) },
+    { LSTRKEY( "lcd" ), LROVAL( lcd_map ) },
     { LSTRKEY( "led" ), LROVAL( led_map ) },
     { LNILKEY, LNILVAL },
 };
