@@ -1,6 +1,6 @@
 rpc = rpc.connect("/dev/tivac")
 
-adc = rpc.adc
+adc = rpc.tm4c.proxima.adc
 button = rpc.tm4c.proxima.buttons
 accel = rpc.tm4c.proxima.accel
 dac = rpc.tm4c.proxima.dac
@@ -106,43 +106,32 @@ print("Ending Accelerometer Test")
 -- Fourth test, DAC + ADC
 
 print("Beginning DAC test")
-print("Please connect PE3 to DAC-A")
-print("Please connect PE2 to DAC-B")
+print("Please connect ADC1 to DAC-A")
+print("Please connect ADC2 to DAC-B")
 pause()
 
 print("Setting both channels to zero")
 dac.seta(0)
 dac.setb(0)
 
-print("Verifying output of channel A")
-adc.sample(8, 1)
-a = adc.getsample(8)
-print(a)
+print("Verifying output of channel A and B")
+a = adc.geta()
+b = adc.getb()
 
-print("Verifying output of channel B")
-adc.sample(10, 1)
-b = adc.getsample(10)
-print(b)
-
-pause()
+if a < 100 and b < 100 then
+    print("Zero value PASSED")
+end
 
 print("Setting both channels to max")
 dac.seta(0x3ff)
 dac.setb(0x3ff)
 
-pause()
-
 print("Verifying output of channel A and B")
-adc.sample(8, 1)
-a = adc.getsample(8)
+a = adc.geta()
+b = adc.getb()
 
-adc.sample(10, 1)
-b = adc.getsample(10)
-print(a)
-print(b)
-
-if a < 100 and b < 100 then
-    print("Zero value PASSED")
+if a > 4000 and b > 4000 then
+    print("Max value PASSED")
 end
 
 os.exit()
