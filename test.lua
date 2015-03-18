@@ -6,6 +6,7 @@ accel = rpc.tm4c.proxima.accel
 dac = rpc.tm4c.proxima.dac
 gyro = rpc.tm4c.proxima.gyro
 led = rpc.tm4c.proxima.led
+motors = rpc.tm4c.proxima.motors
 
 function pause()
     print("Press Enter to continue")
@@ -90,16 +91,21 @@ if math.abs(x) < 1000 then
 else
     print("Unexpected X value")
 end
+print(x)
+
 if math.abs(y) < 1000 then
     print("Y Axis ok")
 else
     print("Unexpected Y value")
 end
+print(y)
+
 if math.abs(z) > 10000 then
     print("Z Axis ok")
 else
     print("Unexpected Z value")
 end
+print(z)
 
 print("Ending Accelerometer Test")
 
@@ -133,5 +139,26 @@ b = adc.getb()
 if a > 4000 and b > 4000 then
     print("Max value PASSED")
 end
+
+print("Beginning Motor test")
+print("Driving forward")
+motors.forward()
+pause()
+
+print("Driving Backwards")
+motors.reverse()
+pause()
+
+print("Turning right")
+motors.right()
+pause()
+
+print("Turning left")
+motors.left()
+pause()
+
+print("Stopping")
+motors.stop()
+pause()
 
 os.exit()
