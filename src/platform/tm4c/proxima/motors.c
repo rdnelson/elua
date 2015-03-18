@@ -1,25 +1,28 @@
 #include "motors.h"
 
+#include "lauxlib.h"
 #include "platform.h"
 
 #define MC1_ADDR 0x60
 #define MC2_ADDR 0x61
 
-#define FWD 0x11
-#define REV 0x22
-#define RIGHT 0x12
-#define LEFT 0x21
-#define STOP 0x00
+#define FWD 0x02
+#define REV 0x01
+#define BRAKE 0x03
+#define COAST 0x00
+
+#define DEADZONE 10
 
 #define NOT_INIT    0
 #define INIT        1
 
 static unsigned char accel_state = NOT_INIT;
 
-int motor_impl(int dir)
+int motor_impl(int left, int right)
 {
     u8 addr = MC1_ADDR;
     u8 i;
+    s16 power = left;
 
     if ( accel_state == NOT_INIT ) {
         platform_i2c_setup( 1, PLATFORM_I2C_SPEED_FAST );
@@ -28,55 +31,65 @@ int motor_impl(int dir)
     }
 
     // This must only run twice
-    for(i = 0; i < 1; i++) {
+    for(i = 0; i < 2; i++) {
         u8 cmd;
+        power = power - 127;
 
-        switch(dir & 0xF) {
-            case 0x01:
-                cmd = 0xaa;
-                break;
-            case 0x02:
-                cmd = 0xa9;
-                break;
-            default:
-                cmd = 0xab;
-                break;
+        if (power > DEADZONE) {
+            cmd = FWD;
+        } else if (power < -DEADZONE) {
+            cmd = REV;
+        } else {
+            cmd = BRAKE;
         }
+
+        power = abs(power) / 3;
 
         platform_i2c_send_address(1, addr, PLATFORM_I2C_DIRECTION_TRANSMITTER);
         platform_i2c_send_start(1);
-        platform_i2c_send_byte(1, cmd);
+        platform_i2c_send_byte(1, 0x00);
+        platform_i2c_send_byte(1, (power << 2) | cmd);
         platform_i2c_send_stop(1);
 
-        dir >>= 4;
         addr = MC2_ADDR;
+        power = (-right) + 256;
     }
 
     return 0;
 }
 
+int proxima_motors_set( lua_State* L )
+{
+    u8 left, right;
+
+    left = luaL_checkinteger( L, 1 );
+    right = luaL_checkinteger( L, 2 );
+
+    return motor_impl(left, right);
+}
+
 int proxima_motors_forward( lua_State* L )
 {
-    return motor_impl(FWD);
+    return motor_impl(256, 256);
 }
 
 int proxima_motors_reverse( lua_State* L )
 {
-    return motor_impl(REV);
+    return motor_impl(0, 0);
 }
 
 int proxima_motors_right( lua_State* L )
 {
-    return motor_impl(RIGHT);
+    return motor_impl(256, 0);
 }
 
 int proxima_motors_left( lua_State* L )
 {
-    return motor_impl(LEFT);
+    return motor_impl(0, 256);
 }
 
 int proxima_motors_stop( lua_State* L )
 {
-    return motor_impl(STOP);
+    return motor_impl(127, 127);
 }
 
