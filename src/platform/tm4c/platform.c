@@ -576,17 +576,17 @@ int platform_i2c_recv_byte( unsigned id, int ack )
 static const u32 uart_base[] = { UART0_BASE, UART1_BASE, UART2_BASE, UART3_BASE, UART4_BASE, UART5_BASE, UART7_BASE };
 static const u32 uart_sysctl[] = { SYSCTL_PERIPH_UART0, SYSCTL_PERIPH_UART1, SYSCTL_PERIPH_UART2,
     SYSCTL_PERIPH_UART3, SYSCTL_PERIPH_UART4, SYSCTL_PERIPH_UART5, SYSCTL_PERIPH_UART7 };
-static const u32 uart_gpio_base[] = { GPIO_PORTA_BASE, GPIO_PORTC_BASE, GPIO_PORTD_BASE, GPIO_PORTC_BASE,
+static const u32 uart_gpio_base[] = { GPIO_PORTA_BASE, GPIO_PORTB_BASE, GPIO_PORTD_BASE, GPIO_PORTC_BASE,
     GPIO_PORTC_BASE, GPIO_PORTE_BASE, GPIO_PORTE_BASE };
 static const u8 uart_gpio_pins[] = { GPIO_PIN_0 | GPIO_PIN_1,
-                                     GPIO_PIN_4 | GPIO_PIN_5,
+                                     GPIO_PIN_0 | GPIO_PIN_1,
                                      GPIO_PIN_6 | GPIO_PIN_7,
                                      GPIO_PIN_6 | GPIO_PIN_7,
                                      GPIO_PIN_4 | GPIO_PIN_5,
                                      GPIO_PIN_4 | GPIO_PIN_5,
                                      GPIO_PIN_0 | GPIO_PIN_1 };
 static const u32 uart_gpiofunc[] = { GPIO_PA0_U0RX, GPIO_PA1_U0TX,
-                                    GPIO_PC4_U1RX, GPIO_PC5_U1TX,
+                                    GPIO_PB0_U1RX, GPIO_PB1_U1TX,
                                     GPIO_PD6_U2RX, GPIO_PD7_U2TX,
                                     GPIO_PC6_U3RX, GPIO_PC7_U3TX,
                                     GPIO_PC4_U4RX, GPIO_PC5_U4TX,
