@@ -217,6 +217,13 @@ enum
 #define PLATFORM_UART_FLOW_RTS                1
 #define PLATFORM_UART_FLOW_CTS                2
 
+// IrDA State
+enum
+{
+  PLATFORM_UART_IRDA_OFF,
+  PLATFORM_UART_IRDA_ON,
+};
+
 // The platform UART functions
 int platform_uart_exists( unsigned id );
 u32 platform_uart_setup( unsigned id, u32 baud, int databits, int parity, int stopbits );
@@ -227,6 +234,8 @@ int platform_uart_recv( unsigned id, unsigned timer_id, timer_data_type timeout 
 int platform_s_uart_recv( unsigned id, timer_data_type timeout );
 int platform_uart_set_flow_control( unsigned id, int type );
 int platform_s_uart_set_flow_control( unsigned id, int type );
+int platform_uart_set_irda( unsigned id, int type );
+int platform_s_uart_set_irda( unsigned id, int type );
 
 // *****************************************************************************
 // PWM subsection

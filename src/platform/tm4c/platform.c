@@ -707,6 +707,24 @@ int platform_s_uart_set_flow_control( unsigned id, int type )
     return PLATFORM_ERR;
 }
 
+int platform_s_uart_set_irda( unsigned id, int state )
+{
+    MAP_UARTDisable( uart_base[ id ] );
+
+    if( state == PLATFORM_UART_IRDA_ON )
+    {
+        MAP_UARTEnableSIR( uart_base[ id ], 0 );
+    }
+    else
+    {
+        MAP_UARTDisableSIR( uart_base[ id ] );
+    }
+
+    MAP_UARTEnable( uart_base[ id ] );
+
+    return PLATFORM_OK;
+}
+
 const u32 timer_base[] = { TIMER0_BASE, TIMER1_BASE, TIMER2_BASE, TIMER3_BASE, TIMER4_BASE, TIMER5_BASE };
 static const u32 timer_sysctl[] = { SYSCTL_PERIPH_TIMER0, SYSCTL_PERIPH_TIMER1, SYSCTL_PERIPH_TIMER2, SYSCTL_PERIPH_TIMER3, SYSCTL_PERIPH_TIMER4, SYSCTL_PERIPH_TIMER5 };
 

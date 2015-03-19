@@ -241,3 +241,10 @@ int platform_uart_set_flow_control( unsigned id, int type )
   return platform_s_uart_set_flow_control( id, type );
 }
 
+int platform_uart_set_irda( unsigned id, int state )
+{
+  if( id >= SERMUX_SERVICE_ID_FIRST )
+    return PLATFORM_ERR;
+  return platform_s_uart_set_irda( id, state );
+}
+

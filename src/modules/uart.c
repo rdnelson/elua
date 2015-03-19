@@ -216,6 +216,18 @@ static int uart_set_flow_control( lua_State *L )
   return 0;
 }
 
+// Lua: uart.set_irda( id, state )
+static int uart_set_irda( lua_State *L )
+{
+  int id = luaL_checkinteger( L, 1 );
+  int state = luaL_checkinteger( L, 2 );
+
+  MOD_CHECK_ID( uart, id );
+  if( platform_uart_set_irda( id, state ) != PLATFORM_OK )
+    return luaL_error( L, "unable to set the IrDA state on interface %d", id );
+  return 0;
+}
+
 #if defined( BUILD_SERMUX ) || defined( BUILD_USB_CDC )
 
 #define MAX_VUART_NAME_LEN    6
@@ -266,6 +278,7 @@ const LUA_REG_TYPE uart_map[] =
   { LSTRKEY( "getchar" ), LFUNCVAL( uart_getchar ) },
   { LSTRKEY( "set_buffer" ), LFUNCVAL( uart_set_buffer ) },
   { LSTRKEY( "set_flow_control" ), LFUNCVAL( uart_set_flow_control ) },
+  { LSTRKEY( "set_irda" ), LFUNCVAL( uart_set_irda ) },
 #if LUA_OPTIMIZE_MEMORY > 0
   { LSTRKEY( "PAR_EVEN" ), LNUMVAL( PLATFORM_UART_PARITY_EVEN ) },
   { LSTRKEY( "PAR_ODD" ), LNUMVAL( PLATFORM_UART_PARITY_ODD ) },
@@ -280,6 +293,8 @@ const LUA_REG_TYPE uart_map[] =
   { LSTRKEY( "FLOW_NONE" ), LNUMVAL( PLATFORM_UART_FLOW_NONE ) },
   { LSTRKEY( "FLOW_RTS" ), LNUMVAL( PLATFORM_UART_FLOW_RTS ) },
   { LSTRKEY( "FLOW_CTS" ), LNUMVAL( PLATFORM_UART_FLOW_CTS ) },
+  { LSTRKEY( "IRDA_OFF" ), LNUMVAL( PLATFORM_UART_IRDA_OFF ) },
+  { LSTRKEY( "IRDA_ON" ), LNUMVAL( PLATFORM_UART_IRDA_ON ) },
 #endif
 #if LUA_OPTIMIZE_MEMORY > 0 && ( defined( BUILD_SERMUX ) || defined( BUILD_USB_CDC ) )
   { LSTRKEY( "__metatable" ), LROVAL( uart_map ) },
@@ -308,6 +323,8 @@ LUALIB_API int luaopen_uart( lua_State *L )
   MOD_REG_NUMBER( L, "FLOW_NONE", PLATFORM_UART_FLOW_NONE );
   MOD_REG_NUMBER( L, "FLOW_RTS", PLATFORM_UART_FLOW_RTS );
   MOD_REG_NUMBER( L, "FLOW_CTS", PLATFORM_UART_FLOW_CTS );
+  MOD_REG_NUMBER( L, "IRDA_OFF", PLATFORM_UART_IRDA_OFF );
+  MOD_REG_NUMBER( L, "IRDA_ON", PLATFORM_UART_IRDA_ON );
   
   return 1;
 #endif // #if LUA_OPTIMIZE_MEMORY > 0
