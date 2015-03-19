@@ -6,10 +6,10 @@
 
 #define ADC_CH1     8
 #define ADC_CH2     11
-#define ADC_LEFT    4
-#define ADC_RIGHT   2
-#define ADC_CENTER  1
-#define ADC_POT     0
+#define ADC_LEFT    5
+#define ADC_RIGHT   4
+#define ADC_CENTER  2
+#define ADC_POT     1
 
 int proxima_adc_getch( u8 id, lua_State* L )
 {
