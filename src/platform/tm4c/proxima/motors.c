@@ -16,6 +16,8 @@
 #define NOT_INIT    0
 #define INIT        1
 
+#define abs(a) ((a) < 0 ? -(a) : (a))
+
 static unsigned char accel_state = NOT_INIT;
 
 int motor_impl(int left, int right)

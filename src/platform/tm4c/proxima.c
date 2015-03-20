@@ -18,6 +18,7 @@
 #include "proxima/accel.h"
 #include "proxima/adc.h"
 #include "proxima/buttons.h"
+#include "proxima/clock.h"
 #include "proxima/dac.h"
 #include "proxima/gyro.h"
 #include "proxima/led.h"
@@ -113,6 +114,12 @@ const LUA_REG_TYPE proxima_mc_map[] =
     { LNILKEY, LNILVAL },
 };
 
+const LUA_REG_TYPE proxima_clock_map[] =
+{
+    { LSTRKEY("gettime"), LFUNCVAL( proxima_clock_gettime ) },
+    { LNILKEY, LNILVAL },
+};
+
 const LUA_REG_TYPE proxima_map[] =
 {
     { LSTRKEY( "__index" ), LFUNCVAL( tm4c_proxima_mt_index ) },
@@ -125,6 +132,7 @@ const LUA_REG_TYPE proxima_map[] =
     { LSTRKEY( "lcd" ), LROVAL( lcd_map ) },
     { LSTRKEY( "led" ), LROVAL( led_map ) },
     { LSTRKEY( "motors" ), LROVAL( proxima_mc_map ) },
+    { LSTRKEY( "clock" ), LROVAL( proxima_clock_map ) },
     { LNILKEY, LNILVAL },
 };
 
