@@ -24,6 +24,7 @@
 #include "proxima/led.h"
 #include "proxima/lcd.h"
 #include "proxima/motors.h"
+#include "proxima/net.h"
 
 #if LUA_OPTIMIZE_MEMORY == 0
 #error "Proxima module is requires lua LTR"
@@ -121,6 +122,21 @@ const LUA_REG_TYPE proxima_clock_map[] =
     { LNILKEY, LNILVAL },
 };
 
+const LUA_REG_TYPE proxima_net_map[] =
+{
+    { LSTRKEY("open"), LFUNCVAL( proxima_net_open ) },
+    { LSTRKEY("close"), LFUNCVAL( proxima_net_close ) },
+    { LSTRKEY("commit"), LFUNCVAL( proxima_net_commit ) },
+    { LSTRKEY("flush"), LFUNCVAL( proxima_net_flush ) },
+    { LSTRKEY("set_host"), LFUNCVAL( proxima_net_set_host ) },
+    { LSTRKEY("write"), LFUNCVAL( proxima_net_write ) },
+    { LSTRKEY("read"), LFUNCVAL( proxima_net_read ) },
+    { LSTRKEY("set_key"), LFUNCVAL( proxima_net_set_key ) },
+    { LSTRKEY("set_value"), LFUNCVAL( proxima_net_set_value ) },
+    { LSTRKEY("get_status"), LFUNCVAL( proxima_net_get_status ) },
+    { LNILKEY, LNILVAL },
+};
+
 const LUA_REG_TYPE proxima_map[] =
 {
     { LSTRKEY( "__index" ), LFUNCVAL( tm4c_proxima_mt_index ) },
@@ -134,6 +150,7 @@ const LUA_REG_TYPE proxima_map[] =
     { LSTRKEY( "led" ), LROVAL( led_map ) },
     { LSTRKEY( "motors" ), LROVAL( proxima_mc_map ) },
     { LSTRKEY( "clock" ), LROVAL( proxima_clock_map ) },
+    { LSTRKEY( "net" ), LROVAL( proxima_net_map ) },
     { LNILKEY, LNILVAL },
 };
 
