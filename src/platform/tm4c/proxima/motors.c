@@ -2,6 +2,7 @@
 
 #include "lauxlib.h"
 #include "platform.h"
+#include "mpu_help.h"
 
 #define MC1_ADDR 0x60
 #define MC2_ADDR 0x61
@@ -94,4 +95,31 @@ int proxima_motors_stop( lua_State* L )
 {
     return motor_impl(127, 127);
 }
+
+int proxima_motors_get_status( lua_State* L )
+{
+    int id = luaL_checkinteger( L, 1 );
+    u8 addr;
+    u8 data;
+
+    if (id < 0 || id > 2)
+    {
+        return luaL_error( L, "Invalid motor controller id" );
+    }
+
+    if ( id == 1 ) {
+        addr = MC1_ADDR;
+    }
+    else
+    {
+        addr = MC2_ADDR;
+    }
+
+    proxima_help_reg_read_byte(addr, 0x01, &data);
+
+    lua_pushinteger( L, data );
+
+    return 1;
+}
+
 
