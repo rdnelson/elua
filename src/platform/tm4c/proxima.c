@@ -15,6 +15,7 @@
 #include "rom.h"
 #include "rom_map.h"
 
+#include "proxima/spi_help.h"
 #include "proxima/accel.h"
 #include "proxima/adc.h"
 #include "proxima/buttons.h"
@@ -77,6 +78,12 @@ const LUA_REG_TYPE dac_map[] =
     { LSTRKEY("seta"), LFUNCVAL( proxima_dac_seta ) },
     { LSTRKEY("setb"), LFUNCVAL( proxima_dac_setb ) },
     { LSTRKEY("setboth"), LFUNCVAL( proxima_dac_setboth ) },
+    { LNILKEY, LNILVAL },
+};
+
+const LUA_REG_TYPE proxima_spi_map[] =
+{
+    { LSTRKEY("chipselect"), LFUNCVAL( proxima_chip_select ) },
     { LNILKEY, LNILVAL },
 };
 
@@ -152,6 +159,7 @@ const LUA_REG_TYPE proxima_map[] =
     { LSTRKEY( "motors" ), LROVAL( proxima_mc_map ) },
     { LSTRKEY( "clock" ), LROVAL( proxima_clock_map ) },
     { LSTRKEY( "net" ), LROVAL( proxima_net_map ) },
+    { LSTRKEY( "spi" ), LROVAL( proxima_spi_map ) },
     { LNILKEY, LNILVAL },
 };
 

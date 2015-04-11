@@ -12,6 +12,9 @@
 
 #define send_recv(d) platform_spi_send_recv(SPI_BASE, d)
 
+#include "lua.h"
+
+int proxima_chip_select( lua_State* L );
 void setup_select();
 void select_chip(int n);
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-lua5.1 ./build_elua.lua board=EK-TM4C123GXL boot=luarpc
+lua5.1 ./build_elua.lua board=EK-TM4C123GXL #boot=luarpc
 
 if [ $? == 0 ]
 then
